@@ -35,28 +35,25 @@ What does this do?  Read on....
 
 ## Process
 
-Puppeteer - a browser automation tool - can be used to programatically setup a session.
+Puppeteer - a browser automation tool - can be used to programmatically setup a session.
 
 1. Launch a new browser.
 1. Navigate to the login page.
 1. Fill and submit the login form.
 1. Run Lighthouse using the same browser.
 
-First, launch Chrome:
+First, launch Chrome and create a new page:
 ```js
-// This port will be used by Lighthouse later. The specific port is arbitrary.
-const PORT = 8041;
 const browser = await puppeteer.launch({
-  args: [`--remote-debugging-port=${PORT}`],
   // Optional, if you want to see the tests in action.
   headless: false,
   slowMo: 50,
 });
+const page = await browser.newPage();
 ```
 
 Navigate to the login form:
 ```js
-const page = await browser.newPage();
 await page.goto('http://localhost:10632');
 ```
 
@@ -89,18 +86,13 @@ await Promise.all([
 
 At this point, the session that Puppeteer is managing is now logged in.
 
-Close the page used to log in:
-```js
-await page.close();
-// The page has been closed, but the browser still has the relevant session.
-```
-
-Now run Lighthouse, using the same port as before:
+Now run Lighthouse, using the same page as before:
 ```js
 // The local server is running on port 10632.
 const url = 'http://localhost:10632/dashboard';
-// Direct Lighthouse to use the same port.
-const result = await lighthouse(url, {port: PORT, disableStorageReset: true});
+// Direct Lighthouse to use the same page.
+// Disable storage reset so login session is preserved.
+const result = await lighthouse(url, {disableStorageReset: true}, undefined, page);
 const lhr = result.lhr;
 
 // Direct Puppeteer to close the browser - we're done with it.

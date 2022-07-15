@@ -97,8 +97,8 @@ describe('my site', () => {
   });
 
   afterEach(async () => {
+    await logout(page, ORIGIN);
     await page.close();
-    await logout(browser, ORIGIN);
   });
 
   describe('/ logged out', () => {
@@ -119,14 +119,14 @@ describe('my site', () => {
 
   describe('/ logged in', () => {
     it('lighthouse', async () => {
-      await login(browser, ORIGIN);
+      await login(page, ORIGIN);
       await page.goto(ORIGIN);
       const lhr = await runLighthouse(page.url());
       expect(lhr).toHaveLighthouseScoreGreaterThanOrEqual('seo', 0.9);
     });
 
     it('login form should not exist', async () => {
-      await login(browser, ORIGIN);
+      await login(page, ORIGIN);
       await page.goto(ORIGIN);
       const emailInput = await page.$('input[type="email"]');
       const passwordInput = await page.$('input[type="password"]');
@@ -144,14 +144,14 @@ describe('my site', () => {
 
   describe('/dashboard logged in', () => {
     it('lighthouse', async () => {
-      await login(browser, ORIGIN);
+      await login(page, ORIGIN);
       await page.goto(`${ORIGIN}/dashboard`);
       const lhr = await runLighthouse(page.url());
       expect(lhr).toHaveLighthouseScoreGreaterThanOrEqual('seo', 0.9);
     });
 
     it('has secrets', async () => {
-      await login(browser, ORIGIN);
+      await login(page, ORIGIN);
       await page.goto(`${ORIGIN}/dashboard`);
       expect(await page.content()).toContain('secrets');
     });
