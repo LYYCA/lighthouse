@@ -145,6 +145,7 @@ The categories property controls how to score and organize the audit results in 
 | -- | -- | -- |
 | title | `string` | The display name of the category. |
 | description | `string` | The displayed description of the category. |
+| supportedModes | `string[]` (optional, [user flows](https://github.com/GoogleChrome/lighthouse/blob/master/docs/user-flows.md)) | The modes supported by the category. Category will support all modes if this is not provided. |
 | auditRefs | `Object[]` | The audits to include in the category. |
 | auditRefs[$i].id | `string` | The ID of the audit to include. |
 | auditRefs[$i].weight | `number` | The weight of the audit in the scoring of the category. |

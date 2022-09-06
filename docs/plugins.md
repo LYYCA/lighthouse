@@ -75,7 +75,7 @@ This file contains the configuration for your plugin. It can be called anything 
 **Example `plugin.js`**
 
 ```js
-module.exports = {
+export default {
   // Additional audits to run on information Lighthouse gathered.
   audits: [{path: 'lighthouse-plugin-cats/audits/has-cat-images.js'}],
 
@@ -99,7 +99,7 @@ These files contain the logic that will generate results for the Lighthouse repo
 **Example `audits/has-cat-images.js`**
 
 ```js
-const Audit = require('lighthouse').Audit;
+import {Audit} = from 'lighthouse';
 
 class CatAudit extends Audit {
   static get meta() {
@@ -129,7 +129,7 @@ class CatAudit extends Audit {
   }
 }
 
-module.exports = CatAudit;
+export default CatAudit;
 ```
 
 #### Run the plugin locally in development
@@ -164,6 +164,7 @@ Defines the display strings of the plugin's category and configures audit scorin
 - `description: string` _OPTIONAL_ - A more detailed description of the category's purpose.
 - `manualDescription: string` _OPTIONAL_ - A more detailed description of all of the manual audits in a plugin. Only use this if you've added manual audits.
 - `auditRefs: Array<{id: string, weight: number, group?: string}>` **REQUIRED** - The list of audits to include in the plugin category along with their overall weight in the score of the plugin category. Each audit ref may optionally reference a group ID from `groups`.
+- `supportedModes: string[]` _OPTIONAL_ - Which Lighthouse [modes](https://github.com/GoogleChrome/lighthouse/blob/master/docs/user-flows.md) this plugin supports. Category will support all modes if this is not provided.
 
 #### `groups`
 
@@ -239,7 +240,7 @@ You might have noticed that a simple array of network requests is missing from t
 See below for an example of an audit that processes network requests.
 
 ```js
-const {Audit, NetworkRecords} = require('lighthouse');
+import {Audit, NetworkRecords} from 'lighthouse';
 
 class HeaderPoliceAudit {
   static get meta() {
@@ -271,7 +272,7 @@ class HeaderPoliceAudit {
   }
 }
 
-module.exports = HeaderPoliceAudit;
+export default HeaderPoliceAudit;
 ```
 
 ## Best Practices
