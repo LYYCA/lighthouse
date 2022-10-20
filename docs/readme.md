@@ -7,26 +7,24 @@ internals, see [Lighthouse Architecture](architecture.md).
 The example below shows how to run Lighthouse programmatically as a Node module. It
 assumes you've installed Lighthouse as a dependency (`yarn add --dev lighthouse`).
 
-```javascript
-const fs = require('fs');
-const lighthouse = require('lighthouse');
-const chromeLauncher = require('chrome-launcher');
+```js
+import fs from 'fs';
+import lighthouse from 'lighthouse';
+import chromeLauncher from 'chrome-launcher';
 
-(async () => {
-  const chrome = await chromeLauncher.launch({chromeFlags: ['--headless']});
-  const options = {logLevel: 'info', output: 'html', onlyCategories: ['performance'], port: chrome.port};
-  const runnerResult = await lighthouse('https://example.com', options);
+const chrome = await chromeLauncher.launch({chromeFlags: ['--headless']});
+const options = {logLevel: 'info', output: 'html', onlyCategories: ['performance'], port: chrome.port};
+const runnerResult = await lighthouse('https://example.com', options);
 
-  // `.report` is the HTML report as a string
-  const reportHtml = runnerResult.report;
-  fs.writeFileSync('lhreport.html', reportHtml);
+// `.report` is the HTML report as a string
+const reportHtml = runnerResult.report;
+fs.writeFileSync('lhreport.html', reportHtml);
 
-  // `.lhr` is the Lighthouse Result as a JS object
-  console.log('Report is done for', runnerResult.lhr.finalDisplayedUrl);
-  console.log('Performance score was', runnerResult.lhr.categories.performance.score * 100);
+// `.lhr` is the Lighthouse Result as a JS object
+console.log('Report is done for', runnerResult.lhr.finalDisplayedUrl);
+console.log('Performance score was', runnerResult.lhr.categories.performance.score * 100);
 
-  await chrome.kill();
-})();
+await chrome.kill();
 ```
 
 ### Performance-only Lighthouse run
@@ -35,9 +33,8 @@ Many modules consuming Lighthouse are only interested in the performance numbers
 You can limit the audits you run to a particular category or set of audits.
 
 ```js
-// ...
 const flags = {onlyCategories: ['performance']};
-launchChromeAndRunLighthouse(url, flags).then( // ...
+await lighthouse(url, flags);
 ```
 
 You can also craft your own config (e.g. [experimental-config.js](https://github.com/GoogleChrome/lighthouse/blob/main/core/config/experimental-config.js)) for custom runs. Also see the [basic custom audit recipe](https://github.com/GoogleChrome/lighthouse/tree/main/docs/recipes/custom-audit).
@@ -68,8 +65,7 @@ the `logLevel` flag when calling `lighthouse`.
 
 ```javascript
 const flags = {logLevel: 'info'};
-
-launchChromeAndRunLighthouse('https://example.com', flags).then(...);
+await lighthouse('https://example.com', flags);
 ```
 
 ## Configuration
@@ -147,7 +143,6 @@ As an example, here's a trace-only run that reports on user timings and critical
     "user-timings",
     "critical-request-chains"
   ],
-
   "categories": {
     "performance": {
       "name": "Performance Metrics",
