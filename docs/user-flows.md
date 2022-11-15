@@ -40,7 +40,7 @@ In DevTools, navigation is easy: ensure it's the selected mode and then click _A
 ```js
 import {writeFileSync} from 'fs';
 import puppeteer from 'puppeteer';
-import {startFlow} from 'lighthouse/lighthouse-core/fraggle-rock/api.js';
+import {startFlow} from 'lighthouse';
 
 (async function() {
   const browser = await puppeteer.launch();
@@ -83,7 +83,7 @@ In DevTools, select "Timespan" as the mode and click _Start timespan_. Record wh
 ```js
 import {writeFileSync} from 'fs';
 import puppeteer from 'puppeteer';
-import {startFlow} from 'lighthouse/lighthouse-core/fraggle-rock/api.js';
+import {startFlow} from 'lighthouse';
 
 (async function() {
   const browser = await puppeteer.launch();
@@ -118,7 +118,7 @@ In DevTools, select "Snapshot" as the mode. Set up the page in the state you wan
 ```js
 import {writeFileSync} from 'fs';
 import puppeteer from 'puppeteer';
-import {startFlow} from 'lighthouse/lighthouse-core/fraggle-rock/api.js';
+import {startFlow} from 'lighthouse';
 
 (async function() {
   const browser = await puppeteer.launch();
@@ -157,7 +157,7 @@ The below example codifies a user flow for an ecommerce site where the user navi
 import {writeFileSync} from 'fs';
 import puppeteer from 'puppeteer';
 import * as pptrTestingLibrary from 'pptr-testing-library';
-import {startFlow} from 'lighthouse/lighthouse-core/fraggle-rock/api.js';
+import {startFlow} from 'lighthouse';
 
 const {getDocument, queries} = pptrTestingLibrary;
 
