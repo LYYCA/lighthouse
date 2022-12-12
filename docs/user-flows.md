@@ -1,6 +1,6 @@
 # User Flows in Lighthouse
 
-Historically, Lighthouse has analyzed the cold pageload of a page. Starting in 2022, it can analyze and report on the entire page lifecycle via "user flows".
+Historically, Lighthouse has analyzed the cold pageload of a page. Starting in 2022 (Lighthouse v10), it can analyze and report on the entire page lifecycle via "user flows".
 
 #### You might be interested in flows if…
 
@@ -55,6 +55,11 @@ import {startFlow} from 'lighthouse';
     await page.click('a.link');
   });
 
+  // Navigate with startNavigation/endNavigation
+  await flow.startNavigation();
+  await page.click('a.link');
+  await flow.endNavigation();
+
   await browser.close();
   writeFileSync('report.html', await flow.generateReport());
 })();
@@ -64,11 +69,13 @@ import {startFlow} from 'lighthouse';
 
 ##### Triggering a navigation via user interactions
 
-Instead of providing a URL to navigate to, you can provide a callback function, as seen above. This is useful when you want to audit a navigation that's initiated by a scenario like a button click or form submission.
+Instead of providing a URL to navigate to, you can provide a callback function or use `startNavigation`/`endNavigation`, as seen above. This is useful when you want to audit a navigation that's initiated by a scenario like a button click or form submission.
 
 > Aside: Lighthouse typically clears out any active Service Worker and Cache Storage for the origin under test. However, in this case, as it doesn't know the URL being analyzed, Lighthouse cannot clear this storage. This generally reflects the real user experience, but if you still wish to clear the Service Workers and Cache Storage you must do it manually.
 
 This callback function _must_ perform an action that will trigger a navigation. Any interactions completed before the callback promise resolves will be captured by the navigation.
+
+The `startNavigation`/`endNavigation` functions _must_ surround an action that triggers a navigation. Any interactions completed after `startNavigation` is invoked and before `endNavigation` is invoked will be captured by the navigation.
 
 ### Timespan
 
