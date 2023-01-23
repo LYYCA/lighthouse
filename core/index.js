@@ -16,6 +16,7 @@ import {ReportGenerator} from '../report/generator/report-generator.js';
 import {startTimespanGather} from './gather/timespan-runner.js';
 import {snapshotGather} from './gather/snapshot-runner.js';
 import {navigationGather} from './gather/navigation-runner.js';
+import {Util} from './util.cjs';
 import * as LH from '../types/lh.js';
 
 /** @typedef {import('./legacy/gather/connections/connection.js').Connection} Connection */
@@ -151,6 +152,7 @@ function getAuditList() {
 }
 
 const traceCategories = Driver.traceCategories;
+const upgradeLhrForCompatibility = Util.upgradeLhrForCompatibility;
 
 export default lighthouse;
 export {Audit} from './audits/audit.js';
@@ -168,5 +170,6 @@ export {
   generateReport,
   auditFlowArtifacts,
   getAuditList,
+  upgradeLhrForCompatibility,
   traceCategories,
 };

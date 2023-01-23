@@ -85,31 +85,23 @@ class Util {
   }
 
   /**
-   * Returns a new LHR that's reshaped for slightly better ergonomics within the report rendereer.
-   * Also, sets up the localized UI strings used within renderer and makes changes to old LHRs to be
-   * compatible with current renderer.
-   * The LHR passed in is not mutated.
-   * TODO(team): we all agree the LHR shape change is technical debt we should fix
-   * @param {LH.Result} result
-   * @return {LH.ReportResult}
+   * Upgrades an lhr object in-place to account for changes in the data structure over major versions.
+   * @param {LH.Result} lhr
    */
-  static prepareReportResult(result) {
-    // If any mutations happen to the report within the renderers, we want the original object untouched
-    const clone = /** @type {LH.ReportResult} */ (JSON.parse(JSON.stringify(result)));
-
+  static upgradeLhrForCompatibility(lhr) {
     // If LHR is older (≤3.0.3), it has no locale setting. Set default.
-    if (!clone.configSettings.locale) {
-      clone.configSettings.locale = 'en';
+    if (!lhr.configSettings.locale) {
+      lhr.configSettings.locale = 'en';
     }
-    if (!clone.configSettings.formFactor) {
+    if (!lhr.configSettings.formFactor) {
       // @ts-expect-error fallback handling for emulatedFormFactor
-      clone.configSettings.formFactor = clone.configSettings.emulatedFormFactor;
+      lhr.configSettings.formFactor = lhr.configSettings.emulatedFormFactor;
     }
 
-    clone.finalDisplayedUrl = this.getFinalDisplayedUrl(clone);
-    clone.mainDocumentUrl = this.getMainDocumentUrl(clone);
+    lhr.finalDisplayedUrl = this.getFinalDisplayedUrl(lhr);
+    lhr.mainDocumentUrl = this.getMainDocumentUrl(lhr);
 
-    for (const audit of Object.values(clone.audits)) {
+    for (const audit of Object.values(lhr.audits)) {
       // Turn 'not-applicable' (LHR <4.0) and 'not_applicable' (older proto versions)
       // into 'notApplicable' (LHR ≥4.0).
       // @ts-expect-error tsc rightly flags that these values shouldn't occur.
@@ -169,20 +161,14 @@ class Util {
       }
     }
 
-    // For convenience, smoosh all AuditResults into their auditRef (which has just weight & group)
-    if (typeof clone.categories !== 'object') throw new Error('No categories provided.');
-
-    /** @type {Map<string, Array<LH.ReportResult.AuditRef>>} */
-    const relevantAuditToMetricsMap = new Map();
-
     // This backcompat converts old LHRs (<9.0.0) to use the new "hidden" group.
     // Old LHRs used "no group" to identify audits that should be hidden in performance instead of the "hidden" group.
     // Newer LHRs use "no group" to identify opportunities and diagnostics whose groups are assigned by details type.
-    const [majorVersion] = clone.lighthouseVersion.split('.').map(Number);
-    const perfCategory = clone.categories['performance'];
+    const [majorVersion] = lhr.lighthouseVersion.split('.').map(Number);
+    const perfCategory = lhr.categories['performance'];
     if (majorVersion < 9 && perfCategory) {
-      if (!clone.categoryGroups) clone.categoryGroups = {};
-      clone.categoryGroups['hidden'] = {title: ''};
+      if (!lhr.categoryGroups) lhr.categoryGroups = {};
+      lhr.categoryGroups['hidden'] = {title: ''};
       for (const auditRef of perfCategory.auditRefs) {
         if (!auditRef.group) {
           auditRef.group = 'hidden';
@@ -191,6 +177,56 @@ class Util {
         }
       }
     }
+
+    // Add some minimal stuff so older reports still work.
+    if (!lhr.environment) {
+      // @ts-expect-error
+      lhr.environment = {benchmarkIndex: 0};
+    }
+    if (!lhr.configSettings.screenEmulation) {
+      // @ts-expect-error
+      lhr.configSettings.screenEmulation = {};
+    }
+    if (!lhr.i18n) {
+      // @ts-expect-error
+      lhr.i18n = {};
+    }
+
+    // In 10.0, full-page-screenshot became a top-level property on the LHR.
+    if (lhr.audits['full-page-screenshot']) {
+      const details = /** @type {LH.Result.FullPageScreenshot=} */ (
+        lhr.audits['full-page-screenshot'].details);
+      if (details) {
+        lhr.fullPageScreenshot = {
+          screenshot: details.screenshot,
+          nodes: details.nodes,
+        };
+      } else {
+        lhr.fullPageScreenshot = null;
+      }
+      delete lhr.audits['full-page-screenshot'];
+    }
+  }
+
+  /**
+   * Returns a new LHR that's reshaped for slightly better ergonomics within the report rendereer.
+   * Also, sets up the localized UI strings used within renderer and makes changes to old LHRs to be
+   * compatible with current renderer.
+   * The LHR passed in is not mutated.
+   * TODO(team): we all agree the LHR shape change is technical debt we should fix
+   * @param {LH.Result} lhr
+   * @return {LH.ReportResult}
+   */
+  static prepareReportResult(lhr) {
+    // If any mutations happen to the report within the renderers, we want the original object untouched
+    const clone = /** @type {LH.ReportResult} */ (JSON.parse(JSON.stringify(lhr)));
+    Util.upgradeLhrForCompatibility(clone);
+
+    // For convenience, smoosh all AuditResults into their auditRef (which has just weight & group)
+    if (typeof clone.categories !== 'object') throw new Error('No categories provided.');
+
+    /** @type {Map<string, Array<LH.ReportResult.AuditRef>>} */
+    const relevantAuditToMetricsMap = new Map();
 
     for (const category of Object.values(clone.categories)) {
       // Make basic lookup table for relevantAudits
@@ -226,35 +262,6 @@ class Util {
           });
         }
       });
-    }
-
-    // Add some minimal stuff so older reports still work.
-    if (!clone.environment) {
-      // @ts-expect-error
-      clone.environment = {benchmarkIndex: 0};
-    }
-    if (!clone.configSettings.screenEmulation) {
-      // @ts-expect-error
-      clone.configSettings.screenEmulation = {};
-    }
-    if (!clone.i18n) {
-      // @ts-expect-error
-      clone.i18n = {};
-    }
-
-    // In 10.0, full-page-screenshot became a top-level property on the LHR.
-    if (clone.audits['full-page-screenshot']) {
-      const details = /** @type {LH.Result.FullPageScreenshot=} */ (
-        clone.audits['full-page-screenshot'].details);
-      if (details) {
-        clone.fullPageScreenshot = {
-          screenshot: details.screenshot,
-          nodes: details.nodes,
-        };
-      } else {
-        clone.fullPageScreenshot = null;
-      }
-      delete clone.audits['full-page-screenshot'];
     }
 
     return clone;
