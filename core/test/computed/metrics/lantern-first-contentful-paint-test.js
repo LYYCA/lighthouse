@@ -41,11 +41,11 @@ describe('Metrics: Lantern FCP', () => {
     const devtoolsLog = networkRecordsToDevtoolsLog([
       {
         transferSize: 2000,
-        url: 'https://example.com/',
+        url: 'https://example.com/', // Main document (always included).
         resourceType: 'Document',
         priority: 'High',
         startTime: 0,
-        endTime: 0.0001, // Before FCP
+        endTime: 1000,
         timing: {sslStart: 50, sslEnd: 100, connectStart: 50, connectEnd: 100},
       },
       {
@@ -53,7 +53,7 @@ describe('Metrics: Lantern FCP', () => {
         url: 'https://example.com/script.js',
         resourceType: 'Script',
         priority: 'High',
-        startTime: 0.015, // After FCP
+        startTime: 1000, // After FCP.
         endTime: -1,
         timing: {sslStart: 50, sslEnd: 100, connectStart: 50, connectEnd: 100},
       },

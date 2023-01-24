@@ -5,29 +5,29 @@
  */
 
 import InspectorIssues from '../../../gather/gatherers/inspector-issues.js';
-import {NetworkRequest} from '../../../lib/network-request.js';
 import {createMockContext} from '../mock-driver.js';
 import {flushAllTimersAndMicrotasks, timers} from '../../test-utils.js';
 import {networkRecordsToDevtoolsLog} from '../../network-records-to-devtools-log.js';
+import {NetworkRecorder} from '../../../lib/network-recorder.js';
 
 /**
  * @param {Partial<LH.Artifacts.NetworkRequest>=} partial
- * @return {LH.Artifacts.NetworkRequest}
+ * @return {Partial<LH.Artifacts.NetworkRequest>}
  */
 function mockRequest(partial) {
-  return Object.assign(new NetworkRequest(), {
+  return {
     url: 'https://example.com',
     documentURL: 'https://example.com',
     finished: true,
     frameId: 'frameId',
     isSecure: true,
     isValid: true,
-    parsedURL: {scheme: 'https'},
+    parsedURL: {scheme: 'https', host: 'example.com', securityOrigin: 'https://example.com'},
     protocol: 'http/1.1',
     requestMethod: 'GET',
     resourceType: 'Document',
     ...partial,
-  });
+  };
 }
 
 /**
@@ -185,11 +185,12 @@ describe('_getArtifact', () => {
       mockCSP(),
       mockDeprecation('AuthorizationCoveredByWildcard'),
     ];
-    const networkRecords = [
+    const devtoolsLog = networkRecordsToDevtoolsLog([
       mockRequest({requestId: '1'}),
       mockRequest({requestId: '2'}),
       mockRequest({requestId: '3'}),
-    ];
+    ]);
+    const networkRecords = NetworkRecorder.recordsFromLogs(devtoolsLog);
 
     const artifact = await gatherer._getArtifact(networkRecords);
 
@@ -258,11 +259,12 @@ describe('_getArtifact', () => {
       mockBlockedByResponse({request: {requestId: '5'}}),
       mockBlockedByResponse({request: {requestId: '6'}}),
     ];
-    const networkRecords = [
+    const devtoolsLog = networkRecordsToDevtoolsLog([
       mockRequest({requestId: '1'}),
       mockRequest({requestId: '3'}),
       mockRequest({requestId: '5'}),
-    ];
+    ]);
+    const networkRecords = NetworkRecorder.recordsFromLogs(devtoolsLog);
 
     const artifact = await gatherer._getArtifact(networkRecords);
 
@@ -327,10 +329,10 @@ describe('FR compat (inspector-issues)', () => {
       .mockEvent('Audits.issueAdded', {
         issue: mockMixedContent({request: {requestId: '1'}}),
       });
-    networkRecords = [
+    devtoolsLog = networkRecordsToDevtoolsLog([
       mockRequest({requestId: '1'}),
-    ];
-    devtoolsLog = networkRecordsToDevtoolsLog(networkRecords);
+    ]);
+    networkRecords = NetworkRecorder.recordsFromLogs(devtoolsLog);
   });
 
   it('uses loadData in legacy mode', async () => {
